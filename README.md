@@ -5,3 +5,5 @@ This project utilizes Bayesian logistic regression to analyze loan default risk 
 - Tra Tran (s3694890)
 - Thomas Bui (s3878174)
 - Sharon Vincent (s402489)
+## RunJAGSOut
+https://drive.google.com/file/d/1oSKEu_iUTUdsf8N2oZLIKUNZvcpmcNdK/view?usp=sharing
