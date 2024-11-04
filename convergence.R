@@ -8,7 +8,7 @@ library(runjags)
 library(coda)
 
 # runJagsOut1: Noninformative - Nonimputed -------------------------------------------------------------
-runJagsOut1 <- readRDS("~/Desktop/MATH2269 Applied Bayesian Statistics/Assignments/A3/Non-imputed/runJagsOut/runJagsOut1.rds")
+runJagsOut1 <- readRDS("runJagsOut/runJagsOut1.rds")
 
 runJagsOut1$timetaken
 
@@ -36,7 +36,7 @@ summary1 <- codadf1 %>%
 
 
 # runJagsOut2: Informative - Nonimputed -------------------------------------------------------------
-runJagsOut2 <- readRDS("~/Desktop/MATH2269 Applied Bayesian Statistics/Assignments/A3/Non-imputed/runJagsOut/runJagsOut2.rds")
+runJagsOut2 <- readRDS("runJagsOut/runJagsOut2.rds")
 
 codaSamples2 <- as.mcmc.list( runJagsOut2 )
 
@@ -61,7 +61,7 @@ runJagsOut2$timetaken
 
 
 # runJagsOut3: Noninformative - Imputed -------------------------------------------------------------
-runJagsOut3 <- readRDS("~/Desktop/MATH2269 Applied Bayesian Statistics/Assignments/A3/Imputed/runJagsOut/runJagsOut1.rds")
+runJagsOut3 <- readRDS("runJagsOut/runJagsOut1.rds")
 
 runJagsOut3$timetaken
 codaSamples3 <- as.mcmc.list( runJagsOut3 )
@@ -85,7 +85,7 @@ summary3 <- codadf3 %>%
 
 
 # runJagsOut4:Informative - Imputed -------------------------------------------------------------
-runJagsOut4 <- readRDS("~/Desktop/MATH2269 Applied Bayesian Statistics/Assignments/A3/Imputed/runJagsOut/runJagsOut2.rds")
+runJagsOut4 <- readRDS("runJagsOut/runJagsOut2.rds")
 
 runJagsOut4$timetaken
 codaSamples4 <- as.mcmc.list( runJagsOut4 )
@@ -105,118 +105,6 @@ summary4 <- codadf4 %>%
             lower = HDIofMCMC(value, credMass = 0.95)[1],
             upper = HDIofMCMC(value, credMass = 0.95)[2],
             ESS = effectiveSize(value))
-
-
-# Helper ------------------------------------------------------------------
-
-HDIofMCMC = function( sampleVec , credMass=0.95 ) {
-  sortedPts = sort( sampleVec )
-  ciIdxInc = ceiling( credMass * length( sortedPts ) )
-  nCIs = length( sortedPts ) - ciIdxInc
-  ciWidth = rep( 0 , nCIs )
-  for ( i in 1:nCIs ) {
-    ciWidth[ i ] = sortedPts[ i + ciIdxInc ] - sortedPts[ i ]
-  }
-  HDImin = sortedPts[ which.min( ciWidth ) ]
-  HDImax = sortedPts[ which.min( ciWidth ) + ciIdxInc ]
-  HDIlim = c( HDImin , HDImax )
-  return( HDIlim )
-}
-
-mode <- function(sampleVec) {
-  dres <- density(sampleVec)
-  modeParam <- dres$x[which.max(dres$y)]
-  return(modeParam)
-}
-
-
-DbdaAcfPlot <- function(codaObjectPar) {
-  
-  nChain <- length(codaObjectPar)
-  
-  xMat <- NULL
-  yMat <- NULL
-  
-  # Loop through chains
-  for (cIdx in 1:nChain) {
-    acfInfo <- acf(codaObjectPar[[cIdx]], plot = FALSE)
-    xMat <- cbind(xMat, acfInfo$lag)
-    yMat <- cbind(yMat, acfInfo$acf)
-  }
-  
-  # Plot the ACF for each chain
-  matplot(xMat, yMat, type = "o", pch = 20, ylim = c(0, 1),
-          main = "Autocorrelation Plot", xlab = "Lag", ylab = "Autocorrelation")
-  abline(h = 0, lty = "dashed")
-  
-  # Calculate and display the effective sample size (ESS)
-  EffChnLngth <- effectiveSize(codaObjectPar)
-  text(x = max(xMat), y = max(yMat), adj = c(1.0, 1.0), cex = 1.25,
-       labels = paste("ESS =", round(EffChnLngth, 1)))
-}
-
-
-DbdaDensPlot <- function(codaObjectPar) {
-  
-  nChain = length(codaObjectPar)
-  
-  xMat = NULL
-  yMat = NULL
-  hdiLims = NULL
-  
-  # Loop over chains
-  for (cIdx in 1:nChain) {
-    densInfo = density(codaObjectPar[[cIdx]]) 
-    xMat = cbind(xMat, densInfo$x)
-    yMat = cbind(yMat, densInfo$y)
-    hdiLims = cbind(hdiLims, HDIofMCMC(codaObjectPar[[cIdx]]))
-  }
-  
-  # Create density plot with smooth solid lines
-  matplot(xMat, yMat, type = "l", lty = 1, lwd = 2, col = 1:nChain,
-          main = "Density Plots", xlab = "Param. Value", ylab = "Density")
-  
-  # Add baseline
-  abline(h = 0)
-  
-  # Add 95% HDI markers
-  points(hdiLims[1,], rep(0, nChain), col = 1:nChain, pch = "|")
-  points(hdiLims[2,], rep(0, nChain), col = 1:nChain, pch = "|")
-  text(mean(hdiLims), 0, "95% HDI", adj = c(0.5, -0.2))
-  
-  # Compute Monte Carlo Standard Error (MCSE)
-  EffChnLngth = effectiveSize(codaObjectPar)
-  MCSE = sd(as.matrix(codaObjectPar)) / sqrt(EffChnLngth)
-  
-  # Add text for MCSE
-  text(max(xMat), max(yMat), adj = c(1.0, 1.0), cex = 1.25,
-       paste("MCSE =\n", signif(MCSE, 3)))
-}
-
-
-mcmcDiagnostics = function(codaObjectPar, title="MCMC Diagnostics"){
-  
-  
-  par(mfrow=c(2,2), oma = c(0, 0, 3, 0))
-  
-  # Traceplot
-  coda::traceplot(codaObjectPar , main="Trace Plot" , ylab="Param. Value")
-  
-  # # Gelman.plot
-  # coda::gelman.plot( codaObjectPar , main="Gelman Plot" , auto.layout=FALSE)
-  
-  # Autocorrelation
-  DbdaAcfPlot(codaObjectPar)
-  
-  # Density
-  DbdaDensPlot(codaObjectPar)
-  
-  mtext(title, outer = TRUE, line = -1, cex = 1.5)
-  
-  par(mfrow=c(1,1))
-  
-}
-
 
 
 # Convergence -------------------------------------------------------------

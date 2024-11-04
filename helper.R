@@ -1,7 +1,3 @@
-library(runjags)
-library(coda)
-
-
 HDIofMCMC = function( sampleVec , credMass=0.95 ) {
   sortedPts = sort( sampleVec )
   ciIdxInc = ceiling( credMass * length( sortedPts ) )

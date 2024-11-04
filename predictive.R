@@ -10,8 +10,11 @@ library(tidymodels)
 # data --------------------------------------------------------------------
 set.seed(123)
 
-data_test12 <- initial_split(data12, prop = ratio, strata = "BAD") %>% testing()
-data_test34 <- initial_split(data34, prop = ratio, strata = "BAD") %>% testing()
+dataset1 <- read.csv("data/nonImputedHMEQ.csv")
+dataset2 <- read.csv("data/ImputedHMEQ.csv")
+
+data_test12 <- initial_split(dataset1, prop = ratio, strata = "BAD") %>% testing()
+data_test34 <- initial_split(dataset2, prop = ratio, strata = "BAD") %>% testing()
 
 testSummary1 <- summary1 %>% 
   filter(str_detect(parameter, "pred"))
